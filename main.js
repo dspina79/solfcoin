@@ -10,7 +10,7 @@ class Block {
     }
 
     calculateHash() {
-        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data)).toString();
+        return SHA256(this.index + this.previousHash + this.ts + JSON.stringify(this.data)).toString();
     }
 }
 
@@ -27,6 +27,24 @@ class Blockchain {
         block.previousHash = this.getLatestBlock().hash;
         block.hash = block.calculateHash();
         this.chain.push(block);
+    }
+
+    isChainValid() {
+        for (let i = 1; i < this.chain.length; i++) {
+            const current = this.chain[i];
+            const previous = this.chain[i -1];
+
+            // check the hash is still valid
+            if (current.hash !== current.calculateHash()) {
+                return false;
+            }
+
+            if (current.previousHash !== previous.hash) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     createGenesisBlock() {
@@ -51,3 +69,8 @@ solfcoin.addBlock(block1);
 solfcoin.addBlock(block2);
 
 console.log(JSON.stringify(solfcoin, null, 4));
+console.log(solfcoin.isChainValid());
+
+// tampering
+solfcoin.chain[1].ts = '1/2/1989';
+console.log(solfcoin.isChainValid());
