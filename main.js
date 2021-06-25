@@ -1,4 +1,5 @@
 const SHA256 = require('crypto-js/sha256');
+const fs = require('fs');
 
 class Block {
     constructor(index, timestamp, data, previousHash = '') {
@@ -30,6 +31,13 @@ class Blockchain {
         this.difficulty = 5;
     }
 
+    persist() {
+        fs.writeFile('solfchain.json', JSON.stringify(this), (err) => {
+            if (err !== null) {
+                console.log('Error writing: ' + JSON.stringify(err));
+            }
+        });
+    }
 
     getLatestBlock() {
         return this.chain[this.chain.length - 1];
@@ -87,3 +95,4 @@ console.log(solfcoin.isChainValid());
 // tampering
 solfcoin.chain[1].ts = '1/2/1989';
 console.log(solfcoin.isChainValid());
+solfcoin.persist();
