@@ -19,7 +19,7 @@ class Block {
     }
 
     calculateHash() {
-        return SHA256(this.previousHash + this.ts + JSON.stringify(this.data) + this.nonce).toString();
+        return SHA256(this.previousHash + this.ts + JSON.stringify(this.transactions) + this.nonce).toString();
     }
 
     mineBlock(difficulty) {
@@ -56,6 +56,23 @@ class Blockchain {
         this.pendingTransactions.push(transaction);
     }
 
+    getBalance(address) {
+        let balance = 0;
+        for (const block of this.chain) {
+            for (const trans of block.transactions) {
+                if (address === trans.fromAddress) {
+                    balance -= trans.amount;
+                }
+                
+                if (address === trans.toAddress) {
+                    balance += trans.amount;
+                }
+            }
+        }
+
+        return balance;
+    }
+
     minePendingTransactions(miningRewardAddress) {
         let block = new Block(Date.now(), this.pendingTransactions);
         block.mineBlock(this.difficulty);
@@ -85,9 +102,31 @@ class Blockchain {
     }
 
     createGenesisBlock() {
-        return new Block(0, '1/1/2021', 'Initialized Data', '0');
+        const transaction = new Transaction(null, null, 0);
+        const trans = [transaction];
+        return new Block('1/1/2021', trans, '0');
     }
 }
 
 
 let solfcoin = new Blockchain();
+const myAddress = 'addr_A';
+
+solfcoin.addTransaction(new Transaction('address_b', myAddress, 18.00));
+solfcoin.addTransaction(new Transaction(myAddress, 'address_c', 3.02));
+solfcoin.addTransaction(new Transaction('address_b', myAddress, 9.11));
+solfcoin.addTransaction(new Transaction('address_c', 'address_b', 12.10));
+
+console.log('Minning Iteration 1');
+solfcoin.minePendingTransactions(myAddress);
+
+console.log('Balance of address_b: ' + solfcoin.getBalance('address_b'));
+console.log('Balance of address_c: ' + solfcoin.getBalance('address_c'));
+console.log('My balance: ' + solfcoin.getBalance(myAddress));
+
+console.log('Mining Iteration 2');
+solfcoin.minePendingTransactions(myAddress);
+
+console.log('Balance of address_b: ' + solfcoin.getBalance('address_b'));
+console.log('Balance of address_c: ' + solfcoin.getBalance('address_c'));
+console.log('My balance: ' + solfcoin.getBalance(myAddress));
