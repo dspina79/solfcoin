@@ -21,7 +21,7 @@ class Transaction {
 
         const hashTx = this.calculateHash();
         const sig = signingKey.sign(hashTx, 'base64');
-        this.signature = signature.toDER('hex');
+        this.signature = sig.toDER('hex');
     }
 
     isValid() {
@@ -32,7 +32,9 @@ class Transaction {
         }
 
         const publicKey = ec.keyFromPublic(this.fromAddress, 'hex');
-        publicKey.verify(this.calculateHash(), this.signature);
+
+        // check if the signature was used to sign the hash via public key
+        return publicKey.verify(this.calculateHash(), this.signature);
     }
 }
 
@@ -57,6 +59,16 @@ class Block {
 
         console.log("Block mined: " + this.hash);
     }
+
+    hasValidTransactions() {
+        for (const tx of this.transactions) {
+            if (!tx.isValid()) {
+                return false;
+            }
+
+            return true;
+        }
+    }
 }
 
 class Blockchain {
@@ -80,6 +92,14 @@ class Blockchain {
     }
 
     addTransaction(transaction) {
+        if (!transaction.fromAddress || !transaction.toAddress) {
+            throw new Error('Transaction missing from or to address.');
+        }
+
+        if (!transaction.isValid()) {
+            throw new Error('Cannot add invalid transation to chain.');
+        }
+
         this.pendingTransactions.push(transaction);
     }
 
@@ -114,6 +134,10 @@ class Blockchain {
         for (let i = 1; i < this.chain.length; i++) {
             const current = this.chain[i];
             const previous = this.chain[i -1];
+
+            if (!current.hasValidTransactions()) {
+                return false;
+            }
 
             // check the hash is still valid
             if (current.hash !== current.calculateHash()) {

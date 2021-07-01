@@ -1,12 +1,16 @@
 const {Transaction, Block, Blockchain} = require('./blockhain')
+const EC = require('elliptic').ec;
+const ec = new EC('secp256k1');
+
+const myKey = ec.keyFromPrivate('bcb3f1be9da70a3e492b29bdb21d4c21fabbafa1db6f93b5addfdb462b6795fa');
+const myAddress = myKey.getPublic('hex');
+
 
 let solfcoin = new Blockchain();
-const myAddress = 'addr_A';
 
-solfcoin.addTransaction(new Transaction('address_b', myAddress, 18.00));
-solfcoin.addTransaction(new Transaction(myAddress, 'address_c', 3.02));
-solfcoin.addTransaction(new Transaction('address_b', myAddress, 9.11));
-solfcoin.addTransaction(new Transaction('address_c', 'address_b', 12.10));
+const trx1 = new Transaction(myAddress, 'address_b', 15.02);
+trx1.signTransaction(myKey);
+solfcoin.addTransaction(trx1);
 
 console.log('Minning Iteration 1');
 solfcoin.minePendingTransactions(myAddress);
